@@ -1,3 +1,4 @@
+import axios from "axios";
 import { server } from "./mocks/server";
 import APIClient, { axiosInstance, baseURL } from "../src/services/ApiClient";
 import { HttpResponse, http } from "msw";
@@ -77,7 +78,12 @@ describe("APIClient", () => {
     try {
       await client.get();
     } catch (error) {
-      console.log(error, "TOKEN NOT REFRESHED");
+      if (axios.isAxiosError(error) && error.response) {
+        // Now we can safely assert on the error response
+        expect(error.response.status).toBe(403);
+      } else {
+        throw error; // Re-throw the error if it's not the expected shape
+      }
     } finally {
       expect(localStorage.getItem("access")).toBe(null);
       expect(localStorage.getItem("refresh")).toBe(null);
